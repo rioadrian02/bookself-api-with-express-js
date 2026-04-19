@@ -1,8 +1,9 @@
-import { ClientError, InvariantError, NotFoundError } from "../../../exceptions/index.js";
+import { ClientError, InvariantError, NotFoundError, AuthorizationError } from "../../../exceptions/index.js";
 import response from "../../../utils/response.js";
 import BookRepositories from "../repositories/book-repositories.js";
 
 const storeBook = async (req, res, next) => {
+    const userId = req.user.id;
     const { name, year, author, summary, publisher, pageCount, readPage, reading } = req.validated;
 
     if(!name) {
@@ -22,6 +23,7 @@ const storeBook = async (req, res, next) => {
         pageCount,
         readPage,
         reading,
+        owner: userId
     }
 
    const book = await BookRepositories.createBook(newBook);
@@ -34,17 +36,25 @@ const storeBook = async (req, res, next) => {
 }
 
 const getBooks = async (req, res) => {
+    const userId = req.user.id;
     const { name, reading, finished } = req.validated;
 
-    const books = await BookRepositories.getBooks(name, reading, finished);
+    const books = await BookRepositories.getBooks(name, reading, finished, userId);
 
     return response(res, 200, "Buku sukes ditampilkan", books);
 }
 
 const findById = async (req, res, next) => {
     const { id } = req.params;
-    
-    const book = await BookRepositories.getBookById(id)
+    const userId = req.user.id;
+
+    const isOwner = await BookRepositories.verifyBookOwner(id, userId);
+
+    if(!isOwner) {
+        return next(new AuthorizationError("Anda tidak berhak mengakses resource ini"));
+    }
+
+    const book = await BookRepositories.getBookById(id);
 
     if(!book) {
         return next(new NotFoundError("Buku tidak ditemukan"));
@@ -53,6 +63,7 @@ const findById = async (req, res, next) => {
 }
 
 const update = async (req, res, next) => {
+    const userId = req.user.id;
     const { id } = req.params;
     const {  name, year, author, summary, publisher, pageCount, readPage } = req.validated;
 
@@ -66,6 +77,12 @@ const update = async (req, res, next) => {
         return next(new ClientError("Gagal memperbarui buku. readPage tidak boleh lebih besar dari pageCount"));
     }
 
+    const isOwner = await BookRepositories.verifyBookOwner(id, userId);
+
+    if(!isOwner) {
+        return next(new AuthorizationError("Anda tidak berhak mengakses resource ini"));
+    }
+
     const book = await BookRepositories.editBook(id, {  name, year, author, summary, publisher, pageCount, readPage, reading });
 
     if(!book) {
@@ -75,7 +92,14 @@ const update = async (req, res, next) => {
 }
 
 const destroy = async (req, res, next) => {
+    const userId = req.user.id;
     const { id } = req.params;
+
+    const isOwner = await BookRepositories.verifyBookOwner(id, userId);
+    
+    if(!isOwner) {
+        return next(new AuthorizationError("Anda tidak berhak mengakses resource ini"));
+    }
 
     const message = await BookRepositories.deleteBook(id);
 

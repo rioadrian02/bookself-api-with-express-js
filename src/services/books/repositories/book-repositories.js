@@ -8,15 +8,15 @@ class BookRepositories {
         this._pool = new Pool();
     }
 
-    async createBook({ name, year, author, summary, publisher, pageCount, readPage, reading }) {
+    async createBook({ name, year, author, summary, publisher, pageCount, readPage, reading, owner }) {
         const id = nanoid(16);
         const insertedAt = new Date().toISOString();
         const updatedAt = insertedAt;
         const finished = readPage === pageCount;
 
         const query = {
-            text: "INSERT INTO books(id, name, year, author, summary, publisher, page_count, read_page, finished, reading, inserted_at, updated_at) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id, name, year, author, summary, publisher, page_count, read_page, finished, reading, inserted_at, updated_at",
-            values: [id, name, year, author, summary, publisher, pageCount, readPage, finished, reading, insertedAt, updatedAt]
+            text: "INSERT INTO books(id, name, year, author, summary, publisher, page_count, read_page, finished, reading, inserted_at, updated_at, owner) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id, name, year, author, summary, publisher, page_count, read_page, finished, reading, inserted_at, updated_at, owner",
+            values: [id, name, year, author, summary, publisher, pageCount, readPage, finished, reading, insertedAt, updatedAt, owner]
         }
 
         const result = await this._pool.query(query);
@@ -24,9 +24,10 @@ class BookRepositories {
         return result.rows[0].id;
     }
 
-    async getBooks(name, reading, finished) {
+    async getBooks(name, reading, finished, owner) {
         const query = {
-            text: 'SELECT * FROM books'
+            text: 'SELECT * FROM books WHERE owner=$1',
+            values: [owner]
         }
 
         const data = await this._pool.query(query);
@@ -80,6 +81,27 @@ class BookRepositories {
         await this._pool.query(query);
 
         return "Buku berhasil dihapus";
+    }
+
+    async verifyBookOwner(id, owner) {
+        const query = {
+            text: 'SELECT * FROM books WHERE id=$1',
+            values: [id]
+        }
+
+        const result = await this._pool.query(query);
+
+        if(!result.rows.length) {
+            return null;
+        }
+
+        const book = result.rows[0];
+
+        if(book.owner !== owner ) {
+            return null;
+        }
+
+        return book;
     }
 }
 
