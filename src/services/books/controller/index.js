@@ -56,6 +56,8 @@ const update = async (req, res, next) => {
     const { id } = req.params;
     const {  name, year, author, summary, publisher, pageCount, readPage } = req.validated;
 
+    const reading = pageCount === readPage;
+
     if(!name) {
         return next(new ClientError("Gagal memperbarui buku. Mohon isi nama buku"));
     }
@@ -64,7 +66,7 @@ const update = async (req, res, next) => {
         return next(new ClientError("Gagal memperbarui buku. readPage tidak boleh lebih besar dari pageCount"));
     }
 
-    const book = await BookRepositories.editBook(id, {  name, year, author, summary, publisher, pageCount, readPage });
+    const book = await BookRepositories.editBook(id, {  name, year, author, summary, publisher, pageCount, readPage, reading });
 
     if(!book) {
         return next(new NotFoundError("Gagal memperbarui buku. Id tidak ditemukan"));
