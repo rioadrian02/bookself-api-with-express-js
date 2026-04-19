@@ -1,5 +1,5 @@
-import tokenManager from "../security/token-manager";
-import response from "../utils/response";
+import tokenManager from "../security/token-manager.js";
+import response from "../utils/response.js";
 
 const authenticateToken = (req, res, next) => {
     const { authorization } = req.headers;
