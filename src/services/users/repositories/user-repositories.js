@@ -15,7 +15,7 @@ class UserRepositories {
         const updatedAt = createdAt;
 
         const query = {
-            text: 'INSERT INTO users(id, username, password, fullname, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6) RETRUNING id',
+            text: 'INSERT INTO users(id, username, password, fullname, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
             values:[id, username, hashedPassword, fullname, createdAt, updatedAt]
         }
 

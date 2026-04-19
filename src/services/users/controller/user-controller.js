@@ -26,7 +26,7 @@ const getUserById = async (req, res, next) => {
     const user = await userRepositories.findById(id);
 
     if(!user) {
-        return next(NotFoundError('User tidak ditemukan'));
+        return next(new NotFoundError('User tidak ditemukan'));
     }
 
     return response(res, 200, undefined, { userId: user });
