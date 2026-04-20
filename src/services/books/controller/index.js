@@ -48,9 +48,9 @@ const findById = async (req, res, next) => {
     const { id } = req.params;
     const userId = req.user.id;
 
-    const isOwner = await BookRepositories.verifyBookOwner(id, userId);
+    const haveAccess = await BookRepositories.verifyBookAccess(id, userId);
 
-    if(!isOwner) {
+    if(!haveAccess) {
         return next(new AuthorizationError("Anda tidak berhak mengakses resource ini"));
     }
 
@@ -77,9 +77,9 @@ const update = async (req, res, next) => {
         return next(new ClientError("Gagal memperbarui buku. readPage tidak boleh lebih besar dari pageCount"));
     }
 
-    const isOwner = await BookRepositories.verifyBookOwner(id, userId);
+    const haveAccess = await BookRepositories.verifyBookAccess(id, userId);
 
-    if(!isOwner) {
+    if(!haveAccess) {
         return next(new AuthorizationError("Anda tidak berhak mengakses resource ini"));
     }
 
@@ -95,9 +95,9 @@ const destroy = async (req, res, next) => {
     const userId = req.user.id;
     const { id } = req.params;
 
-    const isOwner = await BookRepositories.verifyBookOwner(id, userId);
+    const haveAccess = await BookRepositories.verifyBookAccess(id, userId);
     
-    if(!isOwner) {
+    if(!haveAccess) {
         return next(new AuthorizationError("Anda tidak berhak mengakses resource ini"));
     }
 

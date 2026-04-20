@@ -1,11 +1,13 @@
 import pkg from 'pg';
 const { Pool } = pkg;
 import { nanoid } from 'nanoid';
+import collaborationRepositories from '../../collaborations/repositories/collaboration-repositories';
 
 
 class BookRepositories {
     constructor() {
         this._pool = new Pool();
+        this.collaborationRepositories = collaborationRepositories;
     }
 
     async createBook({ name, year, author, summary, publisher, pageCount, readPage, reading, owner }) {
@@ -26,7 +28,7 @@ class BookRepositories {
 
     async getBooks(name, reading, finished, owner) {
         const query = {
-            text: 'SELECT * FROM books WHERE owner=$1',
+            text: 'SELECT books.* FROM books LEFT JOIN collaborations ON collaborations.book_id = books.id WHERE books.owner = $1 OR collaborations.user_id = $1 GROUP BY books.id',
             values: [owner]
         }
 
@@ -102,6 +104,18 @@ class BookRepositories {
         }
 
         return book;
+    }
+
+    async verifyBookAccess(bookId, userId) {
+        const isOwnerResult = await this.verifyBookOwner(bookId, userId);
+
+        if(isOwnerResult) {
+            return isOwnerResult;
+        }
+
+        const result = await this.collaborationRepositories.verifyCollaborator(bookId, userId);
+
+        return result;
     }
 }
 
