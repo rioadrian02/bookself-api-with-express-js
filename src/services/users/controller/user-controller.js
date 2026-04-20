@@ -32,4 +32,16 @@ const getUserById = async (req, res, next) => {
     return response(res, 200, undefined, { userId: user });
 }
 
-export { createUser, getUserById };
+const getUserByUsername = async(req, res, next) => {
+    const username = req.query.username;
+
+    const user = await userRepositories.getUserByUsername(username);
+
+    if(!user) {
+        return next(new NotFoundError("Username tidak ditemukan"));
+    }
+
+    return response(res, 200, "User berhasil ditampilkan", { users: user });
+}
+
+export { createUser, getUserById, getUserByUsername };

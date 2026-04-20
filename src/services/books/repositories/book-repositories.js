@@ -53,7 +53,7 @@ class BookRepositories {
 
     async getBookById(id) {
         const query = {
-            text: 'SELECT * FROM books WHERE id=$1',
+            text: 'SELECT * FROM books.*, users.username FROM books LEFT JOIN users ON users.id = books.owner WHERE books.id=$1',
             values: [id]
         }
 
