@@ -1,7 +1,7 @@
 import pkg from 'pg';
 const { Pool } = pkg;
 import { nanoid } from 'nanoid';
-import collaborationRepositories from '../../collaborations/repositories/collaboration-repositories';
+import collaborationRepositories from '../../collaborations/repositories/collaboration-repositories.js';
 
 
 class BookRepositories {
@@ -53,7 +53,7 @@ class BookRepositories {
 
     async getBookById(id) {
         const query = {
-            text: 'SELECT * FROM books.*, users.username FROM books LEFT JOIN users ON users.id = books.owner WHERE books.id=$1',
+            text: 'SELECT books.*, users.username FROM books LEFT JOIN users ON users.id = books.owner WHERE books.id=$1',
             values: [id]
         }
 
