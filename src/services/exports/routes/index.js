@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import authenticateToken from '../../../middlewares/authentication';
+import authenticateToken from '../../../middlewares/authentication.js';
 import { exportBodyPayload } from '../validator/schema.js';
 import { validateBody } from '../../../middlewares/validation.js';
 import { exportBooks } from '../controller/export-controller.js';
