@@ -1,5 +1,5 @@
-import response from "../../../utils/response";
-import exportRepositories from "../producers/export-repositories";
+import response from "../../../utils/response.js";
+import exportRepositories from "../producers/export-service.js";
 
 const exportBooks = async (req, res, next) => {
     const { targetEmail } = req.validated;
