@@ -1,0 +1,5 @@
+const uploadImages = () => {
+
+}
+
+export { uploadImages }
