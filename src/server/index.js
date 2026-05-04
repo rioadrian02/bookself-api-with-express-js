@@ -11,6 +11,7 @@ app.use(express.json());
 app.use(cors({
     origin: "*"
 }));
+app.use('/uploads', express.static('src/services/uploads/files/images'));
 app.use(routes);
 app.use(ErrorHandler);
 
