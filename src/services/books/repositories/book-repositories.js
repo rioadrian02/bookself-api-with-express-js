@@ -2,12 +2,14 @@ import pkg from 'pg';
 const { Pool } = pkg;
 import { nanoid } from 'nanoid';
 import collaborationRepositories from '../../collaborations/repositories/collaboration-repositories.js';
+import CacheService from '../../../cache/CacheService.js';
 
 
 class BookRepositories {
     constructor() {
         this._pool = new Pool();
         this.collaborationRepositories = collaborationRepositories;
+        this._cacheServices = new CacheService();
     }
 
     async createBook({ name, year, author, summary, publisher, pageCount, readPage, reading, owner }) {
@@ -27,28 +29,37 @@ class BookRepositories {
     }
 
     async getBooks(name, reading, finished, owner) {
-        const query = {
-            text: 'SELECT books.* FROM books LEFT JOIN collaborations ON collaborations.book_id = books.id WHERE books.owner = $1 OR collaborations.user_id = $1 GROUP BY books.id',
-            values: [owner]
-        }
-
-        const data = await this._pool.query(query);
-
-        let result = data.rows;
-
-        if(name) {
-            result = result.filter((item) => item.name.toLowerCase().includes(name.toLowerCase()));
-        } 
+        const cacheKey = `books:${owner}`;
         
-        if (reading) {
-            result = result.filter((item) => item.reading === (Number(reading) === 1));
-        }
+        try {
+            const books = await this._cacheServices.get(cacheKey);
+            return JSON.parse(books);
+        } catch (error) {
+            const query = {
+                text: 'SELECT books.* FROM books LEFT JOIN collaborations ON collaborations.book_id = books.id WHERE books.owner = $1 OR collaborations.user_id = $1 GROUP BY books.id',
+                values: [owner]
+            }
 
-        if (finished) {
-            result = result.filter((item) => item.finished === (Number(finished) === 1));
+            const data = await this._pool.query(query);
+
+            let result = data.rows;
+
+            await this._cacheServices.set(cacheKey, JSON.stringify(result));
+
+            if(name) {
+                result = result.filter((item) => item.name.toLowerCase().includes(name.toLowerCase()));
+            } 
+            
+            if (reading) {
+                result = result.filter((item) => item.reading === (Number(reading) === 1));
+            }
+
+            if (finished) {
+                result = result.filter((item) => item.finished === (Number(finished) === 1));
+            }
+            
+            return result;
         }
-        
-        return result;
     }
 
     async getBookById(id) {
