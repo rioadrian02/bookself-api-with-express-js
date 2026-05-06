@@ -1,8 +1,10 @@
 import { Pool } from "pg";
+import CacheService from "../../../cache/CacheService";
 
 class CollaborationRepositories {
     constructor() {
         this._pool = new Pool();
+        this._cacheServices = new CacheService();
     }
 
     async addCollaboration(bookId, userId) {
@@ -12,6 +14,8 @@ class CollaborationRepositories {
         }
 
         const result  = await this._pool.query(query);
+
+        await this._cacheServices.delete(`books:${userId}`);
 
         return result.rows[0].id;
     }
@@ -23,6 +27,8 @@ class CollaborationRepositories {
         }
 
         const result = await this._pool.query(query);
+
+        await this._cacheServices.delete(`books:${userId}`);
 
         return result.rows[0];
     }

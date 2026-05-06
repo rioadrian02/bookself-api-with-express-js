@@ -25,6 +25,8 @@ class BookRepositories {
 
         const result = await this._pool.query(query);
 
+        await this._cacheServices.delete(`books:${owner}`);
+
         return result.rows[0].id;
     }
 
@@ -76,22 +78,34 @@ class BookRepositories {
         const updatedAt = new Date().toISOString();
 
         const query = {
-            text: 'UPDATE books SET name=$1, year=$2, author=$3, summary=$4, publisher=$5, page_count=$6, read_page=$7, reading=$8, updated_at=$9 WHERE id=$10 RETURNING id',
+            text: 'UPDATE books SET name=$1, year=$2, author=$3, summary=$4, publisher=$5, page_count=$6, read_page=$7, reading=$8, updated_at=$9 WHERE id=$10 RETURNING id, owner',
             values: [name, year, author, summary, publisher, pageCount, readPage, reading, updatedAt, id]
         }
 
         const result = await this._pool.query(query);
+
+        const owner = result.rows[0].owner;
+
+        if(result.rows[0]) {
+            await this._cacheServices.delete(`books:${owner}`);
+        }
 
         return result.rows[0];
     }
 
     async deleteBook(id) {
         const query = {
-            text: 'DELETE FROM books WHERE id=$1',
+            text: 'DELETE FROM books WHERE id=$1 RETURNING id, owner',
             values: [id]
         }
 
-        await this._pool.query(query);
+        const result = await this._pool.query(query);
+
+        const owner = result.rows[0].owner;
+
+        if(result.rows[0]) {
+            await this._cacheServices.delete(`books:${owner}`);
+        }
 
         return "Buku berhasil dihapus";
     }
